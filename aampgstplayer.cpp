@@ -189,7 +189,7 @@ AAMPGstPlayer::AAMPGstPlayer(PrivateInstanceAAMP *aamp)
 {
 	privateContext = (AAMPGstPlayerPriv *)malloc(sizeof(*privateContext));
 	memset(privateContext, 0, sizeof(*privateContext));
-	privateContext->magicNumber = (AAMP_GST_PLAYER_PRIVATE_MAGIC ^ ((uint32_t)privateContext));
+	privateContext->magicNumber = (AAMP_GST_PLAYER_PRIVATE_MAGIC ^ ((uint64_t)privateContext));
 	privateContext->audioVolume = 1.0;
 	privateContext->gstPropsDirty = true; //Have to set audioVolume on gst startup
 	privateContext->using_westerossink = false;
@@ -674,7 +674,7 @@ static void AAMPGstPlayer_OnGstBufferUnderflowCb(GstElement* object, guint arg0,
 
 	// Validate that _this->privateContext is valid and has not been freed.
 	if ((_this->privateContext == NULL) ||
-	    (_this->privateContext->magicNumber != (AAMP_GST_PLAYER_PRIVATE_MAGIC ^ ((uint32_t)(_this->privateContext)))))
+	    (_this->privateContext->magicNumber != (AAMP_GST_PLAYER_PRIVATE_MAGIC ^ ((uint64_t)(_this->privateContext)))))
 	{
 		// Return immediately if the player private context is no longer valid.  Fix crash DELIA-31456
 		logprintf("## %s() : Ignore Underflow, the player context is no longer valid ##\n", __FUNCTION__);
