@@ -44,7 +44,7 @@
 #include <inttypes.h>
 #include <libxml/xmlreader.h>
 //#define DEBUG_TIMELINE
-//#define AAMP_HARVEST_SUPPORT_ENABLED
+#define AAMP_HARVEST_SUPPORT_ENABLED
 //#define AAMP_DISABLE_INJECT
 //#define HARVEST_MPD
 
