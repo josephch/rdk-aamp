@@ -43,7 +43,7 @@
 #include <ctime>
 #include <inttypes.h>
 #include <libxml/xmlreader.h>
-//#define DEBUG_TIMELINE
+#define DEBUG_TIMELINE
 #define AAMP_HARVEST_SUPPORT_ENABLED
 //#define AAMP_DISABLE_INJECT
 //#define HARVEST_MPD
@@ -782,7 +782,7 @@ static void GetFragmentUrl( char fragmentUrl[MAX_URI_LENGTH], const FragmentDesc
 }
 
 #ifdef AAMP_HARVEST_SUPPORT_ENABLED
-#define AAMP_HARVEST_MAX_DURATION_SECONDS (5*60)
+#define AAMP_HARVEST_MAX_DURATION_SECONDS (300*60)
 #define AAMP_MAX_HARVEST_TRACKS 64
 #ifdef USE_PLAYERSINKBIN
 #define HARVEST_BASE_PATH "/media/tsb/aamp-harvest/"
@@ -849,7 +849,6 @@ void PrivateStreamAbstractionMPD::HarvestLoop()
 {
 	char *manifestUrl = (char *) aamp->GetManifestUrl();
 	bool isInitialized[AAMP_MAX_HARVEST_TRACKS];
-	MediaStreamContext *pMediaStreamContext = new MediaStreamContext(eTRACK_VIDEO, mContext, aamp, "capture" );
 
 	logprintf("aamp: ready to harvest fragments. mpd %p\n", mpd);
 
@@ -863,48 +862,64 @@ void PrivateStreamAbstractionMPD::HarvestLoop()
 			IPeriod *period = mpd->GetPeriods().at(iPeriod);
 			size_t numAdaptationSets = period->GetAdaptationSets().size();
 
-			for (int iAdaptationSet = numAdaptationSets - 1; iAdaptationSet >= 0; iAdaptationSet--)
+			for (int iAdaptationSet = numAdaptationSets-1; iAdaptationSet > 0; iAdaptationSet--)
 			{
-				memset(pMediaStreamContext, 0, sizeof(MediaStreamContext));
-				pMediaStreamContext->fragmentDescriptor.manifestUrl = manifestUrl;
+				MediaStreamContext mediaStreamContext(eTRACK_VIDEO, mContext, aamp, "capture" );
+				mediaStreamContext.fragmentDescriptor.manifestUrl = manifestUrl;
 				logprintf("%s:%d iAdaptationSet %d\n", __FUNCTION__, __LINE__, iAdaptationSet);
 				IAdaptationSet *adaptationSet = period->GetAdaptationSets().at(iAdaptationSet);
-				pMediaStreamContext->adaptationSet = adaptationSet;
-				size_t representationCount = pMediaStreamContext->adaptationSet->GetRepresentation().size();
+				mediaStreamContext.adaptationSet = adaptationSet;
+				size_t representationCount = mediaStreamContext.adaptationSet->GetRepresentation().size();
+#if 0
 				for (int j = 0; j < representationCount; j++)
+#endif
+				int j = representationCount -1;
 				{
-					memset(isInitialized, 0, sizeof(isInitialized));
-					pMediaStreamContext->fragmentTime = 0;
-					pMediaStreamContext->representation = pMediaStreamContext->adaptationSet->GetRepresentation().at(j);
-					pMediaStreamContext->timeLineIndex = 0;
-					pMediaStreamContext->fragmentRepeatCount = 0;
-					pMediaStreamContext->fragmentOffset = 0;
-					pMediaStreamContext->eos = false;
-					pMediaStreamContext->fragmentDescriptor.baseUrls = &pMediaStreamContext->representation->GetBaseURLs();
-					if (pMediaStreamContext->fragmentDescriptor.baseUrls->size() == 0)
+					mediaStreamContext.representation = mediaStreamContext.adaptationSet->GetRepresentation().at(j);
+					logprintf("Download Adaptation ContentType [%s] rep %s? y/n", adaptationSet->GetContentType().c_str(), mediaStreamContext.representation->GetId().c_str() );
+#if 0
+					char buf[124];
+					if (fgets(buf, sizeof(buf), stdin))
 					{
-						pMediaStreamContext->fragmentDescriptor.baseUrls =
-								&pMediaStreamContext->adaptationSet->GetBaseURLs();
-						if (pMediaStreamContext->fragmentDescriptor.baseUrls->size() == 0)
+						if (buf[0] != 'y')
 						{
-							pMediaStreamContext->fragmentDescriptor.baseUrls = &period->GetBaseURLs();
+							logprintf("Skip rep[%d] %s\n", j, mediaStreamContext.representation->GetId().c_str());
+							continue;
+						}
+					}
+#endif
+
+					memset(isInitialized, 0, sizeof(isInitialized));
+					mediaStreamContext.fragmentTime = 0;
+					mediaStreamContext.timeLineIndex = 0;
+					mediaStreamContext.fragmentRepeatCount = 0;
+					mediaStreamContext.fragmentOffset = 0;
+					mediaStreamContext.eos = false;
+					mediaStreamContext.fragmentDescriptor.baseUrls = &mediaStreamContext.representation->GetBaseURLs();
+					if (mediaStreamContext.fragmentDescriptor.baseUrls->size() == 0)
+					{
+						mediaStreamContext.fragmentDescriptor.baseUrls =
+								&mediaStreamContext.adaptationSet->GetBaseURLs();
+						if (mediaStreamContext.fragmentDescriptor.baseUrls->size() == 0)
+						{
+							mediaStreamContext.fragmentDescriptor.baseUrls = &period->GetBaseURLs();
 						}
 					}
 
-					ISegmentTemplate *segmentTemplate = pMediaStreamContext->adaptationSet->GetSegmentTemplate();
+					ISegmentTemplate *segmentTemplate = mediaStreamContext.adaptationSet->GetSegmentTemplate();
 					if (!segmentTemplate)
 					{
-						segmentTemplate = pMediaStreamContext->representation->GetSegmentTemplate();
+						segmentTemplate = mediaStreamContext.representation->GetSegmentTemplate();
 					}
 					if (segmentTemplate)
 					{
-						pMediaStreamContext->fragmentDescriptor.Number = segmentTemplate->GetStartNumber();
-						pMediaStreamContext->fragmentDescriptor.Bandwidth =
-								pMediaStreamContext->representation->GetBandwidth();
+						mediaStreamContext.fragmentDescriptor.Number = segmentTemplate->GetStartNumber();
+						mediaStreamContext.fragmentDescriptor.Bandwidth =
+								mediaStreamContext.representation->GetBandwidth();
 
-						strcpy(pMediaStreamContext->fragmentDescriptor.RepresentationID,
-								pMediaStreamContext->representation->GetId().c_str());
-						pMediaStreamContext->fragmentDescriptor.Time = 0;
+						strcpy(mediaStreamContext.fragmentDescriptor.RepresentationID,
+								mediaStreamContext.representation->GetId().c_str());
+						mediaStreamContext.fragmentDescriptor.Time = 0;
 
 						if (!isInitialized[j])
 						{
@@ -914,29 +929,29 @@ void PrivateStreamAbstractionMPD::HarvestLoop()
 							if (!initialization.empty())
 							{
 								double fragmentDuration = 0.0;
-								FetchFragment(pMediaStreamContext, initialization, fragmentDuration, true);
+								FetchFragment(&mediaStreamContext, initialization, fragmentDuration, true);
 							}
 						}
 					}
 					else
 					{
-						ISegmentBase *segmentBase = pMediaStreamContext->representation->GetSegmentBase();
+						ISegmentBase *segmentBase = mediaStreamContext.representation->GetSegmentBase();
 						if (segmentBase)
 						{
-							pMediaStreamContext->fragmentOffset = 0;
+							mediaStreamContext.fragmentOffset = 0;
 							const IURLType *urlType = segmentBase->GetInitialization();
 							if (urlType)
 							{
 								std::string range = urlType->GetRange();
 								int start, fin;
 								sscanf(range.c_str(), "%d-%d", &start, &fin);
-								logprintf("init %s %d..%d\n", mMediaTypeName[pMediaStreamContext->mediaType], start, fin);
+								logprintf("init %s %d..%d\n", mMediaTypeName[mediaStreamContext.mediaType], start, fin);
 								char fragmentUrl[MAX_URI_LENGTH];
-								GetFragmentUrl(fragmentUrl, &pMediaStreamContext->fragmentDescriptor, "");
+								GetFragmentUrl(fragmentUrl, &mediaStreamContext.fragmentDescriptor, "");
 								size_t len = 0;
 								ProfilerBucketType bucketType = aamp->GetProfilerBucketForMedia(
-										pMediaStreamContext->mediaType, false);
-								char *ptr = aamp->LoadFragment(bucketType, fragmentUrl, &len, 0, range.c_str(),pMediaStreamContext->mediaType);
+										mediaStreamContext.mediaType, false);
+								char *ptr = aamp->LoadFragment(bucketType, fragmentUrl, &len, 0, range.c_str(),mediaStreamContext.mediaType);
 								if (ptr)
 								{
 									assert(len == 1 + fin - start);
@@ -946,23 +961,22 @@ void PrivateStreamAbstractionMPD::HarvestLoop()
 							}
 						}
 					}
-					if (pMediaStreamContext->adaptationSet)
+					if (mediaStreamContext.adaptationSet)
 					{
-						pMediaStreamContext->lastSegmentTime = 0;
-						while((!pMediaStreamContext->eos) && (pMediaStreamContext->fragmentTime < AAMP_HARVEST_MAX_DURATION_SECONDS))
+						mediaStreamContext.lastSegmentTime = 0;
+						while((!mediaStreamContext.eos) && (mediaStreamContext.fragmentTime < AAMP_HARVEST_MAX_DURATION_SECONDS))
 						{
-							if (!pMediaStreamContext->eos)
+							if (!mediaStreamContext.eos)
 							{
-								PushNextFragment(pMediaStreamContext);
+								PushNextFragment(&mediaStreamContext);
 							}
 						}
-						logprintf("%s:%d - out of loop. adaptation contentType %s, representation b/w %u \n", __FUNCTION__, __LINE__, pMediaStreamContext->adaptationSet->GetContentType().c_str(), pMediaStreamContext->representation->GetBandwidth());
+						logprintf("%s:%d - out of loop. adaptation contentType %s, representation b/w %u \n", __FUNCTION__, __LINE__, mediaStreamContext.adaptationSet->GetContentType().c_str(), mediaStreamContext.representation->GetBandwidth());
 					}
 				}
 			}
 		}
 	}
-	delete pMediaStreamContext;
 	logprintf("MPD fragment harvest done\n");
 }
 
@@ -1166,7 +1180,7 @@ bool PrivateStreamAbstractionMPD::PushNextFragment( struct MediaStreamContext *p
 					pMediaStreamContext->lastSegmentTime = pMediaStreamContext->fragmentDescriptor.Time;
 					float fragmentDuration = duration/timeScale;
 					retval = FetchFragment( pMediaStreamContext, media, fragmentDuration, false, curlInstance);
-					if(retval)
+					if(true)
 					{
 						//logprintf("VOD/CDVR Line:%d fragmentDuration:%f target:%f SegTime%f rate:%f\n",__LINE__,fragmentDuration,pMediaStreamContext->targetDnldPosition,pMediaStreamContext->fragmentTime,rate);
 						if(rate > 1.0)
@@ -1178,6 +1192,7 @@ bool PrivateStreamAbstractionMPD::PushNextFragment( struct MediaStreamContext *p
 							pMediaStreamContext->targetDnldPosition += fragmentDuration;
 						}
 					}
+#if 0
 					if(mContext->checkForRampdown && pMediaStreamContext->mediaType == eMEDIATYPE_VIDEO)
 					{
 						// DELIA-31780 - On audio fragment download failure (http500), rampdown was attempted .
@@ -1191,6 +1206,7 @@ bool PrivateStreamAbstractionMPD::PushNextFragment( struct MediaStreamContext *p
 						return retval; /* Incase of fragment download fail, no need to increase the fragment number to download next fragment,
 								 * instead check the same fragment in lower profile. */
 					}
+#endif
 				}
 				else if (rate < 0)
 				{
