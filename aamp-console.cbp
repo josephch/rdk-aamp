@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="aamp" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/aamp" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-fexceptions" />
+			<Add option="`pkg-config --cflags glib-2.0`" />
+			<Add option="`pkg-config --cflags gstreamer-1.0`" />
+			<Add option="`pkg-config --cflags libdash`" />
+			<Add option="`pkg-config libxml-2.0 --cflags`" />
+			<Add option="-DSTANDALONE_AAMP" />
+			<Add option="-DUSE_GST1" />
+			<Add directory="." />
+			<Add directory="./drm" />
+			<Add directory="./subtitle" />
+			<Add directory="./metrics" />
+			<Add directory="./subtec" />
+			<Add directory="./isobmff" />
+			<Add directory="./drm/helper" />
+			<Add directory="./drm/ave" />
+		</Compiler>
+		<Linker>
+			<Add option="-labr" />
+			<Add option="-lgstapp-1.0" />
+			<Add option="`pkg-config --libs gstreamer-plugins-base-1.0`" />
+			<Add option="`pkg-config --libs gstreamer-1.0`" />
+			<Add option="`pkg-config --libs libdash`" />
+			<Add option="`pkg-config libxml-2.0 --libs`" />
+			<Add option="`pkg-config --libs glib-2.0`" />
+			<Add option="`pkg-config --libs libcurl`" />
+			<Add option="`pkg-config --libs openssl`" />
+			<Add option="`pkg-config --libs libcjson`" />
+			<Add option="-pthread" />
+		</Linker>
+		<Unit filename="AampCacheHandler.h" />
+		<Unit filename="AampConstants.h" />
+		<Unit filename="AampDrmCallbacks.h" />
+		<Unit filename="AampDrmSystems.h" />
+		<Unit filename="AampEvent.h" />
+		<Unit filename="AampEventListener.h" />
+		<Unit filename="AampJsonObject.h" />
+		<Unit filename="AampLogManager.h" />
+		<Unit filename="AampMediaType.h" />
+		<Unit filename="AampMemoryUtils.h" />
+		<Unit filename="AampMutex.h" />
+		<Unit filename="AampProfiler.h" />
+		<Unit filename="AampUtils.h" />
+		<Unit filename="AdManagerBase.h" />
+		<Unit filename="GlobalConfigAAMP.h" />
+		<Unit filename="StreamAbstractionAAMP.h" />
+		<Unit filename="_base64.cpp" />
+		<Unit filename="_base64.h" />
+		<Unit filename="aampgstplayer.cpp" />
+		<Unit filename="aampgstplayer.h" />
+		<Unit filename="aamplogging.cpp" />
+		<Unit filename="admanager_mpd.h" />
+		<Unit filename="base16.cpp" />
+		<Unit filename="base16.h" />
+		<Unit filename="cocoa_window.h" />
+		<Unit filename="drm/ave/StubsForAVEPlayer.cpp" />
+		<Unit filename="drm/ave/drm.cpp" />
+		<Unit filename="drm/ave/drm.h" />
+		<Unit filename="fragmentcollector_hls.cpp" />
+		<Unit filename="fragmentcollector_hls.h" />
+		<Unit filename="fragmentcollector_mpd.cpp" />
+		<Unit filename="fragmentcollector_mpd.h" />
+		<Unit filename="fragmentcollector_progressive.h" />
+		<Unit filename="hdmiin_shim.h" />
+		<Unit filename="iso639map.h" />
+		<Unit filename="isobmff/isobmffbox.h" />
+		<Unit filename="isobmff/isobmffbuffer.h" />
+		<Unit filename="isobmff/isobmffprocessor.h" />
+		<Unit filename="main_aamp.cpp" />
+		<Unit filename="main_aamp.h" />
+		<Unit filename="mediaprocessor.h" />
+		<Unit filename="metrics/FragmentStatistics.h" />
+		<Unit filename="metrics/HTTPStatistics.h" />
+		<Unit filename="metrics/LicnStatistics.h" />
+		<Unit filename="metrics/ProfileInfo.h" />
+		<Unit filename="metrics/VideoStat.h" />
+		<Unit filename="ota_shim.h" />
+		<Unit filename="priv_aamp.h" />
+		<Unit filename="streamabstraction.cpp" />
+		<Unit filename="subtec/PacketSender.hpp" />
+		<Unit filename="subtec/SubtecFactory.hpp" />
+		<Unit filename="subtec/SubtecPacket.hpp" />
+		<Unit filename="subtec/TtmlPacket.hpp" />
+		<Unit filename="subtec/TtmlSubtecParser.hpp" />
+		<Unit filename="subtec/WebvttSubtecDevParser.hpp" />
+		<Unit filename="subtec/WebvttSubtecParser.hpp" />
+		<Unit filename="subtitle/subtitleParser.h" />
+		<Unit filename="subtitle/vttCue.h" />
+		<Unit filename="subtitle/webvttParser.h" />
+		<Unit filename="tsprocessor.cpp" />
+		<Unit filename="tsprocessor.h" />
+		<Extensions />
+	</Project>
+</CodeBlocks_project_file>
