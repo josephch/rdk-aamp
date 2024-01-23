@@ -262,6 +262,7 @@ public:
 	char *index_ptr;
 	size_t index_len;
 	uint64_t lastSegmentTime;
+	uint64_t lastSegmentDuration;
 	uint64_t lastSegmentNumber;
 	int adaptationSetIdx;
 	int representationIndex;
@@ -866,7 +867,7 @@ void PrivateStreamAbstractionMPD::HarvestLoop()
 			logprintf("playing period %d/%d\n", iPeriod, (int) numPeriods);
 			IPeriod *period = mpd->GetPeriods().at(iPeriod);
 			size_t numAdaptationSets = period->GetAdaptationSets().size();
-
+//			int iAdaptationSet = numAdaptationSets-1;
 			for (int iAdaptationSet = numAdaptationSets-1; iAdaptationSet > 0; iAdaptationSet--)
 			{
 				MediaStreamContext mediaStreamContext(eTRACK_VIDEO, mContext, aamp, "capture" );
@@ -875,14 +876,15 @@ void PrivateStreamAbstractionMPD::HarvestLoop()
 				IAdaptationSet *adaptationSet = period->GetAdaptationSets().at(iAdaptationSet);
 				mediaStreamContext.adaptationSet = adaptationSet;
 				size_t representationCount = mediaStreamContext.adaptationSet->GetRepresentation().size();
-#if 0
+#if 1
 				for (int j = 0; j < representationCount; j++)
-#endif
+#else
 				int j = representationCount -1;
+#endif
 				{
 					mediaStreamContext.representation = mediaStreamContext.adaptationSet->GetRepresentation().at(j);
-					logprintf("Download Adaptation ContentType [%s] rep %s? y/n", adaptationSet->GetContentType().c_str(), mediaStreamContext.representation->GetId().c_str() );
-#if 0
+					logprintf("Download Adaptation ContentType [%s] rep %s", adaptationSet->GetContentType().c_str(), mediaStreamContext.representation->GetId().c_str() );
+#if 0 //this will not work as console is read to input other commands
 					char buf[124];
 					if (fgets(buf, sizeof(buf), stdin))
 					{
@@ -968,7 +970,7 @@ void PrivateStreamAbstractionMPD::HarvestLoop()
 					}
 					if (mediaStreamContext.adaptationSet)
 					{
-						mediaStreamContext.lastSegmentTime = 0;
+						//mediaStreamContext.lastSegmentTime = 0;
 						while((!mediaStreamContext.eos) && (mediaStreamContext.fragmentTime < AAMP_HARVEST_MAX_DURATION_SECONDS))
 						{
 							if (!mediaStreamContext.eos)
@@ -1157,6 +1159,10 @@ bool PrivateStreamAbstractionMPD::PushNextFragment( struct MediaStreamContext *p
 #endif			
 						}					
 					}// if starttime
+					else
+					{
+						startTime = pMediaStreamContext->lastSegmentTime + pMediaStreamContext->lastSegmentDuration;
+					}
 					if(0 == pMediaStreamContext->timeLineIndex)
 					{
 						AAMPLOG_INFO("%s:%d Type[%d] update startTime to %" PRIu64 "\n", __FUNCTION__, __LINE__,pMediaStreamContext->type, startTime);
@@ -1170,6 +1176,7 @@ bool PrivateStreamAbstractionMPD::PushNextFragment( struct MediaStreamContext *p
 				ITimeline *timeline = timelines.at(pMediaStreamContext->timeLineIndex);
 				uint32_t repeatCount = timeline->GetRepeatCount();
 				uint32_t duration = timeline->GetDuration();
+				pMediaStreamContext->lastSegmentDuration = duration;
 #ifdef DEBUG_TIMELINE
 				logprintf("%s:%d Type[%d] t=%" PRIu64 " L=%" PRIu64 " d=%d r=%d fragrep=%d x=%d num=%lld\n",__FUNCTION__, __LINE__, 
 				pMediaStreamContext->type,pMediaStreamContext->fragmentDescriptor.Time,
