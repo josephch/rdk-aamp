@@ -830,6 +830,11 @@ static void WriteFile(char* fileName, const char* data, int len)
 			}
 			fileName[i] = '/';
 		}
+		else if (fileName[i] == '?')
+		{
+			fileName[i] = '\0';
+			break;
+		}
 	}
 	FILE *fp = fopen(fileName, "wb");
 	if (NULL == fp)
