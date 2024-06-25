@@ -1045,15 +1045,24 @@ bool PrivateStreamAbstractionMPD::FetchFragment(MediaStreamContext *pMediaStream
 		pMediaStreamContext->fragmentTime += fragmentDuration;
 	}
 #else
-	CachedFragment cachedFragment;
-	memset(&cachedFragment, 0x00, sizeof(cachedFragment));
-	ProfilerBucketType bucketType = aamp->GetProfilerBucketForMedia(pMediaStreamContext->mediaType, isInitializationSegment);
-	bool ret = aamp->LoadFragment(bucketType,fragmentUrl, &cachedFragment.fragment, curlInstance, NULL,pMediaStreamContext->mediaType);
-	if (ret)
+	char filePath[MAX_URI_LENGTH];
+	GetFilePath(filePath, &pMediaStreamContext->fragmentDescriptor, media);
+	struct stat buffer;
+	if (stat (filePath, &buffer) == 0)
 	{
-		GetFilePath(fragmentUrl, &pMediaStreamContext->fragmentDescriptor, media );
-		logprintf("%s:%d filePath %s\n", __FUNCTION__, __LINE__, fragmentUrl);
-		WriteFile(fragmentUrl, cachedFragment.fragment.ptr, cachedFragment.fragment.len);
+		logprintf("%s:%d filePath %s already exists\n", __FUNCTION__, __LINE__, filePath);
+	}
+	else
+	{
+		CachedFragment cachedFragment;
+		memset(&cachedFragment, 0x00, sizeof(cachedFragment));
+		ProfilerBucketType bucketType = aamp->GetProfilerBucketForMedia(pMediaStreamContext->mediaType, isInitializationSegment);
+		bool ret = aamp->LoadFragment(bucketType,fragmentUrl, &cachedFragment.fragment, curlInstance, NULL,pMediaStreamContext->mediaType);
+		if (ret)
+		{
+			logprintf("%s:%d filePath %s\n", __FUNCTION__, __LINE__, filePath);
+			WriteFile(filePath, cachedFragment.fragment.ptr, cachedFragment.fragment.len);
+		}
 	}
 	pMediaStreamContext->fragmentTime += fragmentDuration;
 #endif
