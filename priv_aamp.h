@@ -51,7 +51,7 @@
 #define AAMP_MAX_PIPE_DATA_SIZE 1024    /**< Max size of data send across pipe */
 #define AAMP_LIVE_OFFSET 15             /**< Live offset in seconds */
 #define AAMP_CDVR_LIVE_OFFSET 30 	/**< Live offset in seconds for CDVR hot recording */
-#define CURL_FRAGMENT_DL_TIMEOUT 5L     /**< Curl timeout for fragment download */
+#define CURL_FRAGMENT_DL_TIMEOUT 30L     /**< Curl timeout for fragment download */
 #define CURL_MANIFEST_DL_TIMEOUT 10L       /**< Curl timeout for manifest download */
 #define DEFAULT_CURL_TIMEOUT 20L         /**< Default timeout for Curl downloads */
 #define DEFAULT_CURL_CONNECTTIMEOUT 3L  /**< Curl socket connection timeout */
