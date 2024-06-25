@@ -799,7 +799,7 @@ static void GetFragmentUrl( char fragmentUrl[MAX_URI_LENGTH], const FragmentDesc
  * @param fragmentDescriptor fragment descriptor
  * @param media string containing media info
  */
-static void GetFilePath(char filePath[MAX_URI_LENGTH], const FragmentDescriptor *fragmentDescriptor, std::string media)
+static void GetFilePath(char filePath[MAX_URI_LENGTH], const FragmentDescriptor *fragmentDescriptor, const std::string& media)
 {
 	std::string constructedUri = HARVEST_BASE_PATH;
 	constructedUri += media;
@@ -868,22 +868,22 @@ void PrivateStreamAbstractionMPD::HarvestLoop()
 			IPeriod *period = mpd->GetPeriods().at(iPeriod);
 			size_t numAdaptationSets = period->GetAdaptationSets().size();
 //			int iAdaptationSet = numAdaptationSets-1;
-			for (int iAdaptationSet = numAdaptationSets-1; iAdaptationSet > 0; iAdaptationSet--)
+			for (int iAdaptationSet = numAdaptationSets-1; iAdaptationSet >= 0; iAdaptationSet--)
 			{
-				MediaStreamContext mediaStreamContext(eTRACK_VIDEO, mContext, aamp, "capture" );
-				mediaStreamContext.fragmentDescriptor.manifestUrl = manifestUrl;
 				logprintf("%s:%d iAdaptationSet %d\n", __FUNCTION__, __LINE__, iAdaptationSet);
 				IAdaptationSet *adaptationSet = period->GetAdaptationSets().at(iAdaptationSet);
-				mediaStreamContext.adaptationSet = adaptationSet;
-				size_t representationCount = mediaStreamContext.adaptationSet->GetRepresentation().size();
+				size_t representationCount = adaptationSet->GetRepresentation().size();
 #if 1
 				for (int j = 0; j < representationCount; j++)
 #else
 				int j = representationCount -1;
 #endif
 				{
+					MediaStreamContext mediaStreamContext(eTRACK_VIDEO, mContext, aamp, "capture" );
+					mediaStreamContext.fragmentDescriptor.manifestUrl = manifestUrl;
+					mediaStreamContext.adaptationSet = adaptationSet;
 					mediaStreamContext.representation = mediaStreamContext.adaptationSet->GetRepresentation().at(j);
-					logprintf("Download Adaptation ContentType [%s] rep %s", adaptationSet->GetContentType().c_str(), mediaStreamContext.representation->GetId().c_str() );
+					logprintf("Download Adaptation ContentType [%s] rep %s\n", adaptationSet->GetContentType().c_str(), mediaStreamContext.representation->GetId().c_str() );
 #if 0 //this will not work as console is read to input other commands
 					char buf[124];
 					if (fgets(buf, sizeof(buf), stdin))
